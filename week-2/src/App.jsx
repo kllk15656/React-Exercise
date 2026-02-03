@@ -1,10 +1,10 @@
 import "./styles.css";
-import ColourPicker from "./ColourPicker.jsx";
+import EnrollmentCounter from "./EnrollmentCounter";
 
 export default function App() {
   return (
     <div className="App">
-      <ColourPicker />
+      <EnrollmentCounter />
     </div>
   );
 }
