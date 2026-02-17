@@ -11,9 +11,25 @@ import App from './App.jsx'
   //{id:"todo-2", name:"Repeat", completed:false},
 //];
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+    .register("./service-worker.jsx")
+    .then((registration) => {
+      console.log("Service Worker registered! Scope: ", registration.scope);
+    })
+    .catch((err) => {
+      console.log("Service Worker registration failed: ", err);
+    });
+});
+}
+
+
 const DATA =JSON.parse(localStorage.getItem('tasks')) || [];
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App tasks={DATA} />
   </StrictMode>,
 )
+
+
