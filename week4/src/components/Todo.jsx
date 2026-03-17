@@ -1,4 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import WebcamCapture from "./WebcamCapture";   // ⭐ NEW IMPORT
+import { GetPhotoSrc } from "./db";
+import Popup from "reactjs-popup";
+
 
 function usePrevious(value) {
   const ref = useRef();
@@ -8,29 +12,45 @@ function usePrevious(value) {
   return ref.current;
 }
 
-function Todo({ id, name, completed, toggleTaskCompleted, deleteTask, editTask }) {
+function Todo({  id,
+  name,
+  completed,
+  latitude,
+  longitude,
+  mapURL,
+  smsURL,
+  toggleTaskCompleted,
+  deleteTask,
+  editTask }) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(name);
+
+  // Step 2.1–2.3
+  const [showCamera, setShowCamera] = useState(false);
 
   const editFieldRef = useRef(null);
   const editButtonRef = useRef(null);
 
   const wasEditing = usePrevious(isEditing);
+  const [showPhoto, setShowPhoto] = useState(false);
+  const [photoSrc, setPhotoSrc] = useState(null);
+
+  useEffect(() => {
+  if (showPhoto) {
+    GetPhotoSrc(id).then((src) => setPhotoSrc(src));
+  }
+}, [showPhoto, id]);
 
   useEffect(() => {
     if (!wasEditing && isEditing) {
-      // switched from view → edit
       editFieldRef.current.focus();
     }
     if (wasEditing && !isEditing) {
-      // switched from edit → view
       editButtonRef.current.focus();
     }
   }, [wasEditing, isEditing]);
 
-
-  // 4️⃣ Editing template
   const editingTemplate = (
     <form
       onSubmit={(e) => {
@@ -45,16 +65,15 @@ function Todo({ id, name, completed, toggleTaskCompleted, deleteTask, editTask }
         type="text"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
-        ref={editFieldRef}   // ⭐ important
+        ref={editFieldRef}
       />
-      <button type="submit">Save</button>
-      <button type="button" onClick={() => setIsEditing(false)}>
+      <button type="submit" className="btn btn__primary">Save</button>
+      <button type="button" className="btn" onClick={() => setIsEditing(false)}>
         Cancel
       </button>
     </form>
   );
 
-  // 5️⃣ View template
   const viewTemplate = (
     <div className="stack-small">
       <div className="c-cb">
@@ -64,20 +83,75 @@ function Todo({ id, name, completed, toggleTaskCompleted, deleteTask, editTask }
           defaultChecked={completed}
           onChange={() => toggleTaskCompleted(id)}
         />
-        <label htmlFor={id}>{name}</label>
+        <label htmlFor={id}>
+        {name}{" "}
+        <a
+        href={mapURL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="task-link"
+        >
+          (map)
+        </a>{" "}
+          |{" "}
+        <a
+           href={smsURL}
+          className="task-link"
+        >
+         (sms)
+         </a>
+      </label>
+
       </div>
-      <button type="button" onClick={() => setIsEditing(true)}>
-        Edit
-      </button>
-      <button type="button" onClick={() => deleteTask(id)}>
-        Delete
-      </button>
+
+      <div className="todo-buttons">
+        <button type="button" className="btn" onClick={() => setIsEditing(true)}>
+          Edit
+        </button>
+
+        <button type="button" className="btn" onClick={() => setShowCamera(true)}>
+          Take Photo
+        </button>
+
+        <button
+        type="button"className="btn"
+        onClick={() => setShowPhoto(true)}
+        >View Photo</button>
+
+
+        <button type="button" className="btn btn__danger" onClick={() => deleteTask(id)}>
+          Delete
+        </button>
+      </div>
     </div>
   );
 
   return (
     <li className="todo">
       {isEditing ? editingTemplate : viewTemplate}
+
+      {/* ⭐ Step 2.3 — Show webcam when Take Photo is clicked */}
+      {showCamera && (
+        <WebcamCapture
+          id={id}
+          closeCamera={() => setShowCamera(false)}
+        />
+      )}
+      {showPhoto && (
+  <Popup open={showPhoto} onClose={() => setShowPhoto(false)}>
+    <div className="photo-popup">
+      {photoSrc ? (
+        <img src={photoSrc} alt="Task" />
+      ) : (
+        <p>No photo saved for this task.</p>
+      )}
+      <button className="btn" onClick={() => setShowPhoto(false)}>
+        Close
+      </button>
+    </div>
+  </Popup>
+)}
+
     </li>
   );
 }

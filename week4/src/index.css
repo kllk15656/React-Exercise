@@ -293,3 +293,40 @@ body {
   opacity: 1;
 }
 /* End checkbox styles */
+
+
+/* ⭐ NEW BUTTON STYLES FOR YOUR TODO LIST ⭐ */
+.todo-buttons {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.todo-buttons .btn {
+  border: 2px solid #4d4d4d;
+  padding: 0.6rem 1rem;
+  background: #f4f4f4;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.todo-buttons .btn:hover {
+  background: #e0e0e0;
+}
+
+.todo-buttons .btn__danger {
+  background: #ca3c3c;
+  border-color: #bd2130;
+  color: white;
+}
+.task-link {
+  color: #4d4d4d;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.task-link:hover {
+  color: black;
+}
+

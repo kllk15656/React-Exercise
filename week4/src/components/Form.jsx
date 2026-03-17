@@ -1,22 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function Form({ addTask }) {
+function Form({ addTask, geoFindMe }) {
   const [name, setName] = useState("");
+  const [addition, setAddition] = useState(false);
+
+  useEffect(() => {
+    if (addition) {
+      console.log("useEffect detected addition");
+      geoFindMe();
+      setAddition(false);
+    }
+  });
 
   function handleChange(e) {
     setName(e.target.value);
   }
 
   function handleSubmit(e) {
-    e.preventDefault();      // prevents ?text=... in the URL
-    addTask(name);           // send the new task to App
-    setName("");             // clear the input
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setAddition(true);
+    addTask(name);
+    setName("");
   }
 
   return (
-    // This prevents the page from reloading when the form submits
-      <form onSubmit={handleSubmit}>
-
+    <form onSubmit={handleSubmit}>
       <h2 className="label-wrapper">
         <label htmlFor="new-todo-input" className="label__lg">
           What needs to be done?

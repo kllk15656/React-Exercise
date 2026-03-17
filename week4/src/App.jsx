@@ -24,7 +24,37 @@ const FILTER_NAMES = Object.keys(FILTER_MAP);
 
 export default function App(props) {
 
-  // --- custom persisted state hook ---
+  function geoFindMe() {
+    if (!navigator.geolocation) {
+      console.log("Geolocation is not supported by your browser");
+    } else {
+      console.log("Locating...");
+      navigator.geolocation.getCurrentPosition(success, error);
+    }
+  }
+
+  function success(position) {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+
+    console.log(latitude, longitude);
+    console.log(`Latitude: ${latitude}°, Longitude: ${longitude}°`);
+    console.log(`Try here: https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`);
+
+    locateTask(lastInsertedId, {
+      latitude,
+      longitude,
+      error: "",
+    });
+  }
+
+  function error() {
+    console.log("Unable to retrieve your location");
+  }
+
+  // -----------------------------
+  //  PERSISTED STATE
+  // -----------------------------
   function usePersistedState(key, defaultValue) {
     const [state, setState] = useState(() => {
       const stored = localStorage.getItem(key);
@@ -40,6 +70,7 @@ export default function App(props) {
 
   const [tasks, setTasks] = usePersistedState("tasks", []);
   const [filter, setFilter] = useState("All");
+  const [lastInsertedId, setLastInsertId] = useState("");
 
   const listHeadingRef = useRef(null);
   const prevTaskLength = usePrevious(tasks.length);
@@ -51,13 +82,26 @@ export default function App(props) {
     }
   }, [tasks.length, prevTaskLength]);
 
-  // Add a new task
+  // -----------------------------
+  //  ADD TASK
+  // -----------------------------
   function addTask(name) {
-    const newTask = { id: `todo-${nanoid()}`, name, completed: false };
+    const id = "todo-" + nanoid();
+
+    const newTask = {
+      id: id,
+      name: name,
+      completed: false,
+      location: { latitude: "##", longitude: "##", error: "##" },
+    };
+
+    setLastInsertId(id);
     setTasks([...tasks, newTask]);
   }
 
-  // Toggle completed
+  // -----------------------------
+  //  TOGGLE COMPLETED
+  // -----------------------------
   function toggleTaskCompleted(id) {
     const updatedTasks = tasks.map((task) =>
       id === task.id ? { ...task, completed: !task.completed } : task
@@ -65,13 +109,17 @@ export default function App(props) {
     setTasks(updatedTasks);
   }
 
-  // Delete a task
+  // -----------------------------
+  //  DELETE TASK
+  // -----------------------------
   function deleteTask(id) {
     const remainingTasks = tasks.filter((task) => id !== task.id);
     setTasks(remainingTasks);
   }
 
-  // Edit a task
+  // -----------------------------
+  //  EDIT TASK
+  // -----------------------------
   function editTask(id, newName) {
     const editedTasks = tasks.map((task) =>
       id === task.id ? { ...task, name: newName } : task
@@ -79,7 +127,19 @@ export default function App(props) {
     setTasks(editedTasks);
   }
 
-  // Filter buttons
+ 
+  function locateTask(id, location) {
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === id) {
+        return { ...task, location: location };
+      }
+      return task;
+    });
+
+    setTasks(updatedTasks);
+  }
+
+ 
   const filterList = FILTER_NAMES.map((name) => (
     <FilterButton
       key={name}
@@ -89,7 +149,7 @@ export default function App(props) {
     />
   ));
 
-  // Filtered task list
+  
   const taskList = tasks
     .filter(FILTER_MAP[filter])
     .map((task) => (
@@ -98,21 +158,26 @@ export default function App(props) {
         name={task.name}
         completed={task.completed}
         key={task.id}
+        latitude={task.location.latitude}
+        longitude={task.location.longitude}
         toggleTaskCompleted={toggleTaskCompleted}
         deleteTask={deleteTask}
         editTask={editTask}
       />
     ));
 
-  // Heading text
+ 
   const tasksNoun = taskList.length !== 1 ? "tasks" : "task";
   const headingText = `${taskList.length} ${tasksNoun} remaining`;
 
+  // -----------------------------
+  //  RENDER
+  // -----------------------------
   return (
     <div className="todoapp stack-large">
       <h1>TodoMatic</h1>
 
-      <Form addTask={addTask} />
+      <Form addTask={addTask} geoFindMe={geoFindMe} />
 
       <div className="filters btn-group stack-exception">
         {filterList}
